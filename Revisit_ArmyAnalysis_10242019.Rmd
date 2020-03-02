@@ -1,0 +1,1173 @@
+---
+title: "Revisit Army Analysis 10-24-2019"
+author: "Grace Jimenez"
+date: "10/24/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = '', message = FALSE, warning = FALSE)
+```
+
+#### I imported all wham pathabundace tables that were created for 8way/4way/6way comparisons of WT and GFP.
+```{r}
+# I subsetted each of the data sets starting at column 3 (species identification + sample abundance counts)
+
+wham_pathabundance1 <- read.delim("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_tables/wham_pathabundance_analysis1.tsv")
+wham_pathabundance1.subset <- wham_pathabundance1[,3:ncol(wham_pathabundance1)]
+
+wham_pathabundance2 <- read.delim("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_tables/wham_pathabundance_analysis2.tsv")
+wham_pathabundance2.subset <- wham_pathabundance2[,3:ncol(wham_pathabundance2)]
+
+wham_pathabundance3 <- read.delim("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_tables/wham_pathabundance_remainder1.tsv")
+wham_pathabundance3.subset <- wham_pathabundance3[,3:ncol(wham_pathabundance3)]
+
+wham_pathabundance4 <- read.delim("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_tables/wham_pathabundance_remainder2.tsv")
+wham_pathabundance4.subset <- wham_pathabundance4[,3:ncol(wham_pathabundance4)]
+
+wham_pathabundance5 <- read.delim("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_tables/wham_pathabundance_10242019.tsv")
+wham_pathabundance5.subset <- wham_pathabundance5[,3:ncol(wham_pathabundance5)]
+```
+
+#### Here I aggregated by sample to determine total abundance (of selected organism) per sample.  I removed sample 93 (blank).
+```{r}
+PathAbundance1_total <- as.data.frame(aggregate(wham_pathabundance1.subset[,2:ncol(wham_pathabundance1.subset)], by=list(Species=wham_pathabundance1.subset$Species), FUN=sum))
+
+PathAbundance2_total <- as.data.frame(aggregate(wham_pathabundance2.subset[,2:ncol(wham_pathabundance2.subset)], by=list(Species=wham_pathabundance2.subset$Species), FUN=sum))
+
+PathAbundance3_total <- as.data.frame(aggregate(wham_pathabundance3.subset[,2:ncol(wham_pathabundance3.subset)], by=list(Species=wham_pathabundance3.subset$Species), FUN=sum))
+
+PathAbundance4_total <- as.data.frame(aggregate(wham_pathabundance4.subset[,2:ncol(wham_pathabundance4.subset)], by=list(Species=wham_pathabundance4.subset$Species), FUN=sum))
+
+PathAbundance5_total <- as.data.frame(aggregate(wham_pathabundance5.subset[,2:ncol(wham_pathabundance5.subset)], by=list(Species=wham_pathabundance5.subset$Species), FUN=sum))
+
+library(dplyr)
+PathAbundance.testjoin1 <- full_join(PathAbundance1_total,PathAbundance2_total, by="Species")
+PathAbundance.testjoin2 <- full_join(PathAbundance.testjoin1,PathAbundance3_total, by="Species")
+PathAbundance.testjoin3 <- full_join(PathAbundance.testjoin2,PathAbundance4_total, by="Species")
+PathAbundance.testjoin4 <- full_join(PathAbundance.testjoin3,PathAbundance5_total, by="Species")
+PathAbundance_total <- PathAbundance.testjoin4[-8,]
+PathAbundance_total <- subset(PathAbundance_total, select = -c(X93_S11_Abundance))
+PathAbundance_total[is.na(PathAbundance_total)] <- 0
+```
+
+#### Here I aggregated by condition to determine total abundance (of selected organism) per condition (GFP 8way, GFP 4way, WT 8way, WT 4way). GFP.4way.0hr group has 1 less sample due to sample 93 being unusable.
+```{r}
+GFP.mono.inoc <- c("X40_S14_Abundance", "X57_S21_Abundance", "X81_S1_Abundance")
+GFP.mono.24hr <- c("X25_S8_Abundance", "X56_S38_Abundance", "X73_S23_Abundance", "X97_S13_Abundance")
+GFP.8way.24hr <- c("X31_S19_Abundance",  "X55_S37_Abundance", "X79_S28_Abundance", "X103_S33_Abundance")
+GFP.8way.inoc <- c("X39_S5_Abundance","X63_S27_Abundance", "X87_S5_Abundance")
+GFP.4way.24hr <- c("X29_S17_Abundance", "X53_S35_Abundance", "X77_S26_Abundance", "X101_S31_Abundance")
+GFP.4way.inoc <- c("X37_S12_Abundance", "X61_S25_Abundance", "X85_S25_Abundance" )
+GFP.6way.24hr <- c("X30_S32_Abundance", "X54_S36_Abundance", "X78_S27_Abundance", "X102_S32_Abundance")
+GFP.6way.inoc <- c("X38_S13_Abundance", "X62_S26_Abundance", "X86_S6_Abundance")
+WT.8way.24hr <- c("X28_S16_Abundance", "X52_S34_Abundance", "X76_S25_Abundance", "X100_S30_Abundance") 
+WT.8way.inoc <- c("X36_S11_Abundance", "X60_S24_Abundance", "X84_S4_Abundance")
+WT.4way.24hr <- c("X26_S2_Abundance", "X50_S20_Abundance", "X74_S2_Abundance", "X98_S14_Abundance") 
+WT.4way.inoc <- c("X34_S9_Abundance", "X58_S22_Abundance", "X82_S2_Abundance")
+WT.6way.24hr <- c("X27_S15_Abundance", "X51_S21_Abundance", "X75_S24_Abundance", "X99_S29_Abundance")
+WT.6way.inoc <- c("X35_S10_Abundance", "X59_S23_Abundance", "X83_S27_Abundance")
+
+# We are not usng 0hr data at the moment
+GFP_mono_24 <- as.data.frame(aggregate(PathAbundance_total[,GFP.mono.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+GFP_8way_24 <- as.data.frame(aggregate(PathAbundance_total[,GFP.8way.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+GFP_4way_24 <- as.data.frame(aggregate(PathAbundance_total[,GFP.4way.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+GFP_6way_24 <- as.data.frame(aggregate(PathAbundance_total[,GFP.6way.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+WT_8way_24 <- as.data.frame(aggregate(PathAbundance_total[,WT.8way.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+WT_4way_24 <- as.data.frame(aggregate(PathAbundance_total[,WT.4way.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+WT_6way_24 <- as.data.frame(aggregate(PathAbundance_total[,WT.6way.24hr], by=list(Species=PathAbundance_total$Species), FUN=sum))
+
+GFP_mono_inoc <- as.data.frame(aggregate(PathAbundance_total[,GFP.mono.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum))
+GFP_4way_inoc <- as.data.frame(aggregate(PathAbundance_total[,GFP.4way.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum)) 
+GFP_6way_inoc <- as.data.frame(aggregate(PathAbundance_total[,GFP.6way.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum))    
+GFP_8way_inoc <- as.data.frame(aggregate(PathAbundance_total[,GFP.8way.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum))
+WT_4way_inoc <- as.data.frame(aggregate(PathAbundance_total[,WT.4way.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum))   
+WT_6way_inoc <- as.data.frame(aggregate(PathAbundance_total[,WT.6way.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum))    
+WT_8way_inoc <- as.data.frame(aggregate(PathAbundance_total[,WT.8way.inoc], by=list(Species=PathAbundance_total$Species), FUN=sum)) 
+```
+
+```{r}
+library(reshape2)
+GFP_8way_inoc$Species_Overall <- c(rowSums(GFP_8way_inoc[,2:ncol(GFP_8way_inoc)]))
+GFP_4way_inoc$Species_Overall <- c(rowSums(GFP_4way_inoc[,2:ncol(GFP_4way_inoc)]))
+GFP_6way_inoc$Species_Overall <- c(rowSums(GFP_6way_inoc[,2:ncol(GFP_6way_inoc)]))
+GFP_8way_24$Species_Overall <- c(rowSums(GFP_8way_24[,2:ncol(GFP_8way_24)]))
+GFP_4way_24$Species_Overall <- c(rowSums(GFP_4way_24[,2:ncol(GFP_4way_24)]))
+GFP_6way_24$Species_Overall <- c(rowSums(GFP_6way_24[,2:ncol(GFP_6way_24)]))
+WT_8way_inoc$Species_Overall <- c(rowSums(WT_8way_inoc[,2:ncol(WT_8way_inoc)]))
+WT_4way_inoc$Species_Overall <- c(rowSums(WT_4way_inoc[,2:ncol(WT_4way_inoc)]))
+WT_6way_inoc$Species_Overall <- c(rowSums(WT_6way_inoc[,2:ncol(WT_6way_inoc)]))
+WT_8way_24$Species_Overall <- c(rowSums(WT_8way_24[,2:ncol(WT_8way_24)]))
+WT_4way_24$Species_Overall <- c(rowSums(WT_4way_24[,2:ncol(WT_4way_24)]))
+WT_6way_24$Species_Overall <- c(rowSums(WT_6way_24[,2:ncol(WT_6way_24)]))
+```
+
+```{r}
+library(dplyr)
+GFP.WT.468way.inoc1 <- full_join(GFP_8way_inoc[,c("Species","Species_Overall")], WT_8way_inoc[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.inoc2 <- full_join(GFP.WT.468way.inoc1, GFP_6way_inoc[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.inoc3 <- full_join(GFP.WT.468way.inoc2, WT_6way_inoc[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.inoc4 <- full_join(GFP.WT.468way.inoc3, GFP_4way_inoc[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.inoc <- full_join(GFP.WT.468way.inoc4, WT_4way_inoc[,c("Species","Species_Overall")], by="Species")
+colnames(GFP.WT.468way.inoc) <- c("Species","GFP.8way","WT.8way","GFP.6way","WT.6way","GFP.4way","WT.4way")
+
+GFP.WT.468way.241 <- full_join(GFP_8way_24[,c("Species","Species_Overall")], WT_8way_24[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.242 <- full_join(GFP.WT.468way.241, GFP_6way_24[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.243 <- full_join(GFP.WT.468way.242, WT_6way_24[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.244 <- full_join(GFP.WT.468way.243, GFP_4way_24[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.24 <- full_join(GFP.WT.468way.244, WT_4way_24[,c("Species","Species_Overall")], by="Species")
+colnames(GFP.WT.468way.24) <- c("Species","GFP.8way","WT.8way","GFP.6way","WT.6way","GFP.4way","WT.4way")
+```
+
+```{r}
+GFP.WT.468way.inoc[8,] <- c(0, sum(GFP.WT.468way.inoc[,2]), sum(GFP.WT.468way.inoc[,3]), sum(GFP.WT.468way.inoc[,4]), sum(GFP.WT.468way.inoc[,5]), sum(GFP.WT.468way.inoc[,6]), sum(GFP.WT.468way.inoc[,7]))
+for (j in 2:7){
+for (i in 1:7){
+GFP.WT.468way.inoc[i, j] <- (GFP.WT.468way.inoc[i, j] / GFP.WT.468way.inoc[8,j]) * 100   
+}  
+}
+
+Totals.GFP.WT.468way.inoc <- melt(GFP.WT.468way.inoc, id = "Species")
+Totals.GFP.WT.468way.inoc[is.na(Totals.GFP.WT.468way.inoc)] <- 0
+Totals.GFP.WT.468way.inocV2 <- subset(Totals.GFP.WT.468way.inoc, Totals.GFP.WT.468way.inoc$Species != 0)
+
+
+GFP.WT.468way.24[8,] <- c(0, sum(GFP.WT.468way.24[,2]), sum(GFP.WT.468way.24[,3]), sum(GFP.WT.468way.24[,4]), sum(GFP.WT.468way.24[,5]), sum(GFP.WT.468way.24[,6]), sum(GFP.WT.468way.24[,7]))
+for (j in 2:7){
+for (i in 1:7){
+GFP.WT.468way.24[i, j] <- (GFP.WT.468way.24[i, j] / GFP.WT.468way.24[8,j])  * 100  
+}  
+}
+
+Totals.GFP.WT.468way.24 <- melt(GFP.WT.468way.24, id = "Species")
+Totals.GFP.WT.468way.24[is.na(Totals.GFP.WT.468way.24)] <- 0
+Totals.GFP.WT.468way.24V2 <- subset(Totals.GFP.WT.468way.24, Totals.GFP.WT.468way.24$Species != 0)
+```
+
+```{r}
+library(RColorBrewer)
+library(RSkittleBrewer)
+library(ggplot2)
+colors <- brewer.pal(7,"Dark2")
+colors2 <- brewer.pal(7,"Set1") 
+colors3 <- c("Green3", "Purple2", "DarkOrange", "DarkBlue", "Red2", "Yellow2", "DodgerBlue3")
+colors4 <- c("dodgerblue3", "yellow2", "red2", "darkblue", "darkorange", "purple2", "green3")
+colors4b <- c("dodgerblue3", "darkorange", "firebrick3", "darkblue", "gold", "darkorchid3", "forestgreen")
+colors5 <- c("dodgerblue3", "green3", "red2", "darkblue", "darkorange", "purple2", "yellow2")
+ggplot(Totals.GFP.WT.468way.inocV2[order(Totals.GFP.WT.468way.inocV2$Species, decreasing = T),], aes(variable, value, fill=factor(Species, levels=c("g__Escherichia.s__Escherichia_coli", "g__Lactobacillus.s__Lactobacillus_acidophilus", "g__Bacteroides.s__Bacteroides_ovatus", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Bacteroides.s__Bacteroides_fragilis", "g__Eubacterium.s__Eubacterium_rectale",  "g__Bacteroides.s__Bacteroides_thetaiotaomicron")))) + geom_bar(stat = "identity") + theme(axis.text.x=element_text(size=10, angle=45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold"))  + labs(title= "Species Abundance at Inoculation", y="Relative Abundance (%)", x=element_blank()) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank()) + labs(fill="Species") + scale_fill_manual(name = "Species", labels = c("E. coli", "L. acidophilus", "B. ovatus", "F. prausnitzii", "B. fragilis", "E. rectale", "B. theta"), values=colors4b) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15)) + theme(legend.title = element_text(size=11, face = "bold"))
+```
+
+```{r}
+library(RColorBrewer)
+library(RSkittleBrewer)
+library(ggplot2)
+ggplot(Totals.GFP.WT.468way.24V2[order(Totals.GFP.WT.468way.24V2$Species, decreasing = T),], aes(variable, value, fill=factor(Species, levels=c("g__Escherichia.s__Escherichia_coli", "g__Lactobacillus.s__Lactobacillus_acidophilus", "g__Bacteroides.s__Bacteroides_ovatus", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Bacteroides.s__Bacteroides_fragilis", "g__Eubacterium.s__Eubacterium_rectale",  "g__Bacteroides.s__Bacteroides_thetaiotaomicron")))) + geom_bar(stat = "identity") + theme( axis.text.x=element_text(size=10, angle=45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold"))  + labs(title= "Species Abundance at Hour 24", y="Relative Abundance (%)", x=element_blank()) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank()) + labs(fill="Species") + scale_fill_manual(name = "Species", labels = c("E. coli", "L. acidophilus", "B. ovatus", "F. prausnitzii", "B. fragilis", "E. rectale", "B. theta"), values=colors4b) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15)) + theme(legend.title = element_text(size=11, face = "bold"))
+```
+
+```{r}
+library(RColorBrewer)
+library(RSkittleBrewer)
+library(ggplot2)
+colors <- brewer.pal(7,"Dark2")
+colors2 <- brewer.pal(7,"Set1") 
+colors3 <- c("Green3", "Purple2", "DarkOrange", "DarkBlue", "Red2", "Yellow2", "DodgerBlue3")
+colors4 <- c("dodgerblue3", "yellow2", "red2", "darkblue", "darkorange", "purple2", "green3")
+colors4b <- c("dodgerblue3", "darkorange", "firebrick3", "darkblue", "gold", "darkorchid3", "forestgreen")
+colors5 <- c("dodgerblue3", "green3", "red2", "darkblue", "darkorange", "purple2", "yellow2")
+ggplot(Totals.GFP.WT.468way.inocV2[order(Totals.GFP.WT.468way.inocV2$Species, decreasing = T),], aes(variable, value, fill=factor(Species, levels=c("g__Escherichia.s__Escherichia_coli", "g__Lactobacillus.s__Lactobacillus_acidophilus", "g__Bacteroides.s__Bacteroides_ovatus", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Bacteroides.s__Bacteroides_fragilis", "g__Eubacterium.s__Eubacterium_rectale",  "g__Bacteroides.s__Bacteroides_thetaiotaomicron")))) + geom_bar(stat = "identity") + theme(axis.text.x=element_text(size=10, angle=-45, face = "bold", hjust = 0)) + theme(axis.title.y.left = element_text(size=11, face = "bold"))  + labs(title= "Species Abundance at Inoculation", y="Relative Abundance (%)", x=element_blank()) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank()) + labs(fill="Species") + scale_fill_manual(name = "Species", labels = c("E. coli", "L. acidophilus", "B. ovatus", "F. prausnitzii", "B. fragilis", "E. rectale", "B. theta"), values=colors4b) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15)) + theme(legend.title = element_text(size=11, face = "bold"))
+```
+
+```{r}
+library(RColorBrewer)
+library(RSkittleBrewer)
+library(ggplot2)
+ggplot(Totals.GFP.WT.468way.24V2[order(Totals.GFP.WT.468way.24V2$Species, decreasing = T),], aes(variable, value, fill=factor(Species, levels=c("g__Escherichia.s__Escherichia_coli", "g__Lactobacillus.s__Lactobacillus_acidophilus", "g__Bacteroides.s__Bacteroides_ovatus", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Bacteroides.s__Bacteroides_fragilis", "g__Eubacterium.s__Eubacterium_rectale",  "g__Bacteroides.s__Bacteroides_thetaiotaomicron")))) + geom_bar(stat = "identity") + theme( axis.text.x=element_text(size=10, angle=-45, face = "bold", hjust = 0)) + theme(axis.title.y.left = element_text(size=11, face = "bold"))  + labs(title= "Species Abundance at Hour 24", y="Relative Abundance (%)", x=element_blank()) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank()) + labs(fill="Species") + scale_fill_manual(name = "Species", labels = c("E. coli", "L. acidophilus", "B. ovatus", "F. prausnitzii", "B. fragilis", "E. rectale", "B. theta"), values=colors4b) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15)) + theme(legend.title = element_text(size=11, face = "bold"))
+```
+
+```{r}
+GFP.4way.inoc.T <- as.data.frame(t(GFP_4way_inoc[,2:(ncol(GFP_4way_inoc)-1)]))
+colnames(GFP.4way.inoc.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+GFP.4way.inoc.T$Group <- c("GFP-4way")
+GFP.4way.inoc.T$Group2 <- c("GFP")
+GFP.4way.24.T <- as.data.frame(t(GFP_4way_24[,2:(ncol(GFP_4way_24)-1)]))
+colnames(GFP.4way.24.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+GFP.4way.24.T$Group <- c("GFP-4way")
+GFP.4way.24.T$Group2 <- c("GFP")
+
+GFP.6way.inoc.T <- as.data.frame(t(GFP_6way_inoc[,2:(ncol(GFP_6way_inoc)-1)]))
+colnames(GFP.6way.inoc.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+GFP.6way.inoc.T$Group <- c("GFP-6way")
+GFP.6way.inoc.T$Group2 <- c("GFP")
+GFP.6way.24.T <- as.data.frame(t(GFP_6way_24[,2:(ncol(GFP_6way_24)-1)]))
+colnames(GFP.6way.24.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+GFP.6way.24.T$Group <- c("GFP-6way")
+GFP.6way.24.T$Group2 <- c("GFP")
+
+GFP.8way.inoc.T <- as.data.frame(t(GFP_8way_inoc[,2:(ncol(GFP_8way_inoc)-1)]))
+colnames(GFP.8way.inoc.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+GFP.8way.inoc.T$Group <- c("GFP-8way")
+GFP.8way.inoc.T$Group2 <- c("GFP")
+GFP.8way.24.T <- as.data.frame(t(GFP_8way_24[,2:(ncol(GFP_8way_24)-1)]))
+colnames(GFP.8way.24.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+GFP.8way.24.T$Group <- c("GFP-8way")
+GFP.8way.24.T$Group2 <- c("GFP")
+
+WT.4way.inoc.T <- as.data.frame(t(WT_4way_inoc[,2:(ncol(WT_4way_inoc)-1)]))
+colnames(WT.4way.inoc.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+WT.4way.inoc.T$Group <- c("WT-4way")
+WT.4way.inoc.T$Group2 <- c("WT")
+WT.4way.24.T <- as.data.frame(t(WT_4way_24[,2:(ncol(WT_4way_24)-1)]))
+colnames(WT.4way.24.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+WT.4way.24.T$Group <- c("WT-4way")
+WT.4way.24.T$Group2 <- c("WT")
+
+WT.6way.inoc.T <- as.data.frame(t(WT_6way_inoc[,2:(ncol(WT_6way_inoc)-1)]))
+colnames(WT.6way.inoc.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+WT.6way.inoc.T$Group <- c("WT-6way")
+WT.6way.inoc.T$Group2 <- c("WT")
+WT.6way.24.T <- as.data.frame(t(WT_6way_24[,2:(ncol(WT_6way_24)-1)]))
+colnames(WT.6way.24.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+WT.6way.24.T$Group <- c("WT-6way")
+WT.6way.24.T$Group2 <- c("WT")
+
+WT.8way.inoc.T <- as.data.frame(t(WT_8way_inoc[,2:(ncol(WT_8way_inoc)-1)]))
+colnames(WT.8way.inoc.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+WT.8way.inoc.T$Group <- c("WT-8way")
+WT.8way.inoc.T$Group2 <- c("WT")
+WT.8way.24.T <- as.data.frame(t(WT_8way_24[,2:(ncol(WT_8way_24)-1)]))
+colnames(WT.8way.24.T) <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+WT.8way.24.T$Group <- c("WT-8way")
+WT.8way.24.T$Group2 <- c("WT")
+
+GFP.WT.4way.inoc.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T)
+GFP.WT.4way.24.T <- rbind(GFP.4way.24.T, WT.4way.24.T)
+
+GFP.WT.6way.inoc.T <- rbind(GFP.6way.inoc.T, WT.6way.inoc.T)
+GFP.WT.6way.24.T <- rbind(GFP.6way.24.T, WT.6way.24.T)
+
+GFP.WT.8way.inoc.T <- rbind(GFP.8way.inoc.T, WT.8way.inoc.T)
+GFP.WT.8way.24.T <- rbind(GFP.8way.24.T, WT.8way.24.T)
+
+Inoc_Samples.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T, GFP.6way.inoc.T, WT.6way.inoc.T, GFP.8way.inoc.T, WT.8way.inoc.T) 
+Hour24_Samples.T <- rbind(GFP.4way.24.T, WT.4way.24.T, GFP.6way.24.T, WT.6way.24.T, GFP.8way.24.T, WT.8way.24.T)  
+
+Hour24_Samples2.T <- rbind(GFP.4way.24.T, WT.4way.24.T, GFP.6way.24.T, WT.6way.24.T, GFP.8way.24.T, WT.8way.24.T) 
+colnames(Hour24_Samples2.T) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+
+Inoc_Samples2.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T, GFP.6way.inoc.T, WT.6way.inoc.T, GFP.8way.inoc.T, WT.8way.inoc.T) 
+colnames(Inoc_Samples2.T) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+```
+
+#### Here is the tentative PCA plot for all organisms of inoc samples then hour 24 samples then all samples
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(ggbiplot)
+colors6 <- c("dodgerblue3", "darkorange", "red2", "darkblue", "purple2", "yellow2","gray")
+Inoc_Samples.pca <- prcomp(Inoc_Samples2.T[,1:(ncol(Inoc_Samples2.T)-2)], center = TRUE,scale. = TRUE)
+
+ggbiplot(Inoc_Samples.pca, obs.scale = 1, var.scale = 1, group=Inoc_Samples2.T$Group2, var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE) +
+scale_color_manual(name="Group", values=colors6) +  
+scale_shape_manual(name="Group", values=c(14:19)) +
+geom_point(aes(colour=Inoc_Samples2.T$Group2, shape=Inoc_Samples2.T$Group2), size = 3) +
+ # ggtitle("PCA on Inoculation Samples") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) +
+  xlim(-7,7) +
+  ylim(-4.5,4.5) +
+  theme_bw() +
+  theme(
+    legend.title = element_text(size=14, face = "bold"),
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = 13),
+    axis.title.x=element_text(size=14, face = "bold"),
+    axis.title.y=element_text(size=14,face = "bold")
+  )
+```
+
+```{r eval=FALSE}
+ggbiplot(Inoc_Samples.pca, obs.scale = 1, var.scale = 1, group=Inoc_Samples2.T$Group, var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE) +
+scale_color_manual(name="Group", values=colors6) +  
+scale_shape_manual(name="Group", values=c(14:19)) +
+geom_point(aes(colour=Inoc_Samples2.T$Group, shape=Inoc_Samples2.T$Group), size = 3) +
+  ggtitle("PCA on Inoculation Samples") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) +
+  xlim(-7,7) +
+  ylim(-4.5,4.5) +
+  theme_bw() +
+  theme(
+    legend.title = element_text(size=14, face = "bold"),
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = 13),
+    axis.title.x=element_text(size=14, face = "bold"),
+    axis.title.y=element_text(size=14,face = "bold")
+  )
+```
+
+```{r}
+ggbiplot(Inoc_Samples.pca, group=Inoc_Samples2.T$Group, var.axes = FALSE) + geom_point(aes(colour=Inoc_Samples2.T$Group), size = 3) + scale_color_manual(name="Group", values=colors6) + scale_shape_manual(name="Group", values=c(14:19)) + theme_bw() + labs(title = "PCA on Inoculation Samples", x = "PC1", y = "PC2") + xlim(-7,3.5) + ylim(-3.5,4.5) + theme(legend.title = element_text(size=11, face = "bold")) + theme(axis.title.x=element_text(size=10, face = "bold")) + 
+    theme_bw() +
+  theme(
+    legend.title = element_text(size=14, face = "bold"),
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = 13),
+    axis.title.x=element_text(size=14, face = "bold"),
+    axis.title.y=element_text(size=14,face = "bold")
+  )
+```
+
+
+## This is the attempt to apply variance stabilizing transformation and then PCA separated by all groups 
+```{r eval=FALSE}
+library(DESeq2)
+library(ggplot2)
+library(ellipse)
+
+Inoc_Samples.pca.vsd <- vst(Inoc_Samples2.T[,1:(ncol(Inoc_Samples2.T)-2)], blind=FALSE)
+Inoc_Samples.pca.sampleDists <- dist(t(assay(Inoc_Samples.pca.vsd)))
+Inoc_Samples.pcaData <- plotPCA(Inoc_Samples.pca.vsd, intgroup=c("condition", "type"), returnData=TRUE)
+Inoc_Samples.percentVar <- round(100 * attr(Inoc_Samples.pcaData, "percentVar"))
+centroids <- aggregate(cbind(PC1,PC2)~condition,Inoc_Samples.pcaData,mean)
+
+conf.rgn  <- do.call(rbind,lapply(unique(Inoc_Samples.pcaData$condition),function(t)
+  data.frame(condition=as.character(t),
+             ellipse(cov(Inoc_Samples.pcaData[Inoc_Samples.pcaData$condition==t,1:2]),
+                     centre=as.matrix(centroids[t,2:3]),
+                     level=0.95),
+             stringsAsFactors=FALSE)))
+
+Inoc_Samples.pcaplot <- ggplot(Inoc_Samples.pcaData, aes(PC1, PC2, color=condition)) +
+  geom_point(size=3) +
+  geom_path(data=conf.rgn) +
+  xlab(paste0("PC1: ",Inoc_Samples.percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",Inoc_Samples.percentVar[2],"% variance")) + 
+  ggtitle('PCA on Inoculation Samples')+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  guides(colour = guide_legend(override.aes = list(size=3)))
+```
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(ggbiplot)
+Hour24_Samples.pca <- prcomp(Hour24_Samples2.T[,2:(ncol(Hour24_Samples2.T)-2)], center = TRUE,scale. = TRUE)
+
+ggbiplot(Hour24_Samples.pca, obs.scale = 1, var.scale = 1, group=Hour24_Samples2.T$Group2, var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE) +
+scale_color_manual(name="Group", values=colors6) +  
+scale_shape_manual(name="Group", values=c(14:19)) +
+geom_point(aes(colour=Hour24_Samples2.T$Group2, shape=Hour24_Samples2.T$Group2), size = 3) +
+#ggtitle("PCA on Hour 24 Samples") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) +
+  xlim(-7,7) +
+  ylim(-4.5,4.5) + 
+  theme_bw() +
+  theme(
+    legend.title = element_text(size=14, face = "bold"),
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = 13),
+    axis.title.x=element_text(size=14, face = "bold"),
+    axis.title.y=element_text(size=14,face = "bold")
+  )
+```
+
+```{r}
+All_Samples2.T <- rbind(Hour24_Samples2.T, Inoc_Samples2.T)
+All_Samples.pca <- prcomp(All_Samples2.T[,2:(ncol(All_Samples2.T)-2)], center = TRUE,scale. = TRUE)
+
+ggbiplot(All_Samples.pca, obs.scale = 1, var.scale = 1, group=All_Samples2.T$Group2, var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE) +
+scale_color_manual(name="Group", values=colors6) +  
+scale_shape_manual(name="Group", values=c(14:19)) +
+geom_point(aes(colour=All_Samples2.T$Group2, shape=All_Samples2.T$Group2), size = 3) +
+    #ggtitle("PCA on All Inoculation & Hour 24 Samples") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) +
+  theme(legend.title = element_text(size=12, face = "bold")) +
+  theme(axis.title.x=element_text(size=10,face = "bold")) + 
+  theme(axis.title.y=element_text(size=10,face = "bold")) +
+  theme_bw() + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = rel(1))
+  )
+```
+
+
+
+#### Below is boxplot using melted dataset
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Inoc_Samples_4way.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T) 
+colnames(Inoc_Samples_4way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+Inoc_Samples_4way2.T <- Inoc_Samples_4way.T[,c("E.coli","B.thetaiotaomicron","L.acidophilus","Group")]
+Inoc_4waySamples.forBoxplot <- melt(Inoc_Samples_4way2.T, id = "Group")
+
+p1b1 <- ggplot(data = Inoc_4waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 4-way Samples at Inoculation",y = "Relative Abundance",x = "") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) +
+  #geom_signif(y_position=c(0.005, 0.012, 0.0275), xmin=c(0.8, 1.8,2.8), xmax=c(1.2, 2.2,3.2), annotation=c("0.003*", "0.046*","0.024*"), tip_length=0, textsize = 3, color="black") +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.032) + theme(legend.title = element_text(size=11, face = "bold"))+ 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.005, label = "0.151") +
+  annotate("label", x = 2, y = 0.015, label = "0.008*") +
+  annotate("label", x = 3, y = 0.03, label = "0.560") 
+
+p1b <- ggplot(data = Inoc_4waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=14, angle=-45, face = "bold.italic", colour = "black", hjust = 0)) + theme(axis.title.y.left = element_text(size=15, face = "bold"), axis.text.y = element_text(size = 11, colour = "black")) +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0275) + theme(legend.title = element_text(size=15, face = "bold")) + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15")) + theme(legend.title = element_text(size=15, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.005, label = "0.003*") +
+  annotate("label", x = 2, y = 0.015, label = "0.046*") +
+  annotate("label", x = 3, y = 0.03, label = "0.024*") + ylim(0,0.032) 
+
+p1b
+
+
+p1bb <- ggplot(data = Inoc_4waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(title = "Species Abundances in 4-way Samples at Inoculation",y = "Relative Abundance",x = "") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.032) + theme(legend.title = element_text(size=11, face = "bold"))
+
+p1bb
+```
+
+#### T tests for GFP vs WT of all species in 4way inoculation groups
+```{r}
+t.test(B.thetaiotaomicron ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))  
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Inoc_Samples_6way.T <- rbind(GFP.6way.inoc.T, WT.6way.inoc.T) 
+colnames(Inoc_Samples_6way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+Inoc_Samples_6way2.T <- Inoc_Samples_6way.T[,c("E.coli","B.thetaiotaomicron","L.acidophilus","E.rectale","B.fragilis","Group")]
+Inoc_6waySamples.forBoxplot <- melt(Inoc_Samples_6way2.T, id = "Group")
+
+
+p1c <- ggplot(data = Inoc_6waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=14, angle=-45, face = "bold.italic", colour = "black", hjust = 0)) + theme(axis.title.y.left = element_text(size=15, face = "bold"), axis.text.y = element_text(size = 11, colour = "black")) +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0275) + theme(legend.title = element_text(size=15, face = "bold")) + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15")) + theme(legend.title = element_text(size=15, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.005, label = "0.151") +
+  annotate("label", x = 2, y = 0.005, label = "0.008*") +
+  annotate("label", x = 3, y = 0.01, label = "0.560") +
+  annotate("label", x = 4, y = 0.01, label = "0.164") +
+  annotate("label", x = 5, y = 0.025, label = "0.960") 
+  
+  
+
+p1c
+
+p1cc <- ggplot(data = Inoc_6waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x="") + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0275) + theme_bw() + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray50"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray50"), panel.background = element_rect(color="gray10")) + theme(legend.title = element_text(size=11, face = "bold", hjust = 0.50))+ 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = rel(1))
+  ) + 
+  theme(axis.title.y.left = element_text(size=11, face = "bold"))
+
+p1cc
+```
+
+#### T tests for GFP vs WT of all species in 6way inoculation groups
+```{r}
+t.test(B.fragilis ~ Group, data= Inoc_Samples_6way2.T, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Group, data= Inoc_Samples_6way2.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Inoc_Samples_6way2.T, alternative = c("two.sided"))
+t.test(E.rectale ~ Group, data= Inoc_Samples_6way2.T, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Group, data= Inoc_Samples_6way2.T, alternative = c("two.sided"))  
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Inoc_Samples_8way.T <- rbind(GFP.8way.inoc.T, WT.8way.inoc.T) 
+colnames(Inoc_Samples_8way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group","Group2")
+Inoc_Samples_8way2.T <- Inoc_Samples_8way.T[,c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group")]
+Inoc_8waySamples.forBoxplot <- melt(Inoc_Samples_8way2.T, id = "Group")
+
+p1d1 <- ggplot(data = Inoc_8waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 8-way Samples at Inoculation",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) + theme(axis.text.x=element_text(size=10, angle=-45, face = "bold", hjust = 0)) + #geom_signif(y_position=c(0.0025, 0.0026, 0.0026, 0.004, 0.005, 0.0085, 0.015), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8, 6.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2), annotation=c("0.425", "0.629", "0.663", "0.545", "0.660", "0.141","0.200"), tip_length=0, textsize = 3, color="black") +
+theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0165) + theme(legend.title = element_text(size=11, face = "bold"))  
+
+p1d <- ggplot(data = Inoc_8waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=14, angle=-45, face = "bold.italic", colour = "black", hjust = 0)) + theme(axis.title.y.left = element_text(size=15, face = "bold", color = "black"), axis.text.y = element_text(size = 11, colour = "black")) +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0275) + theme(legend.title = element_text(size=15, face = "bold")) + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15")) + theme(legend.title = element_text(size=15, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.005, label = "0.425") +
+  annotate("label", x = 2, y = 0.005, label = "0.629") +
+  annotate("label", x = 3, y = 0.005, label = "0.663") +
+  annotate("label", x = 4, y = 0.005, label = "0.545") +
+  annotate("label", x = 5, y = 0.01, label = "0.660") +
+  annotate("label", x = 6, y = 0.01, label = "0.141") +
+  annotate("label", x = 7, y = 0.02, label = "0.200") 
+
+
+p1d
+
+p1dd <- ggplot(data = Inoc_8waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(title = "Species Abundances in 8-way Samples at Inoculation",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) + theme(axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0165) + theme(legend.title = element_text(size=11, face = "bold"))  
+
+p1dd
+```
+
+#### T tests for GFP vs WT of all species in 8way inoculation groups
+```{r}
+t.test(B.fragilis ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))
+t.test(B.ovatus ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))
+t.test(E.rectale ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))
+t.test(F.prausnitzii ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))  
+t.test(L.acidophilus ~ Group, data= Inoc_Samples_8way.T, alternative = c("two.sided"))  
+```
+# Distribution of E.coli Abundances
+```{r}
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples.2 <- Hour24_Samples2.T
+Inoc_Samples.2 <- Inoc_Samples2.T
+Hour24_Samples.2$Time <- c("24h")
+Inoc_Samples.2$Time <- c("Inoculation")
+colnames(Inoc_Samples2.T) <- colnames(Hour24_Samples2.T)
+
+Samples.2 <- rbind(Inoc_Samples.2,Hour24_Samples.2)
+Samples.2$Group<-factor(Samples.2$Group, levels=c("GFP-4way", "WT-4way", "GFP-6way", "WT-6way", "GFP-8way", "WT-8way"))
+
+Samples.forBoxplot <- melt(Samples.2, id = "Group")
+
+Samples.2$Time<-factor(Samples.2$Time, levels=c("Inoculation","24h"))
+
+p1 <- ggplot(data = Samples.2, aes(x=Group, y=E.coli, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.0325) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 0.03, label = "0.075") +
+annotate("label", x = 2, y = 0.03, label = "0.272") +
+annotate("label", x = 3, y = 0.025, label = "0.060") +
+annotate("label", x = 4, y = 0.025, label = "0.365") +
+annotate("label", x = 5, y = 0.025, label = "0.336") +
+annotate("label", x = 6, y = 0.02, label = "0.369") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+#geom_signif(y_position=c(0.03, 0.03, 0.0225, 0.025, 0.015, 0.02), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2), annotation=c("0.075", "0.272", "0.060", "0.365", "0.336", "0.369"), tip_length=0, textsize = 3) 
+
+p1
+
+p1a <- ggplot(data = Samples.2, aes(x=Group, y=E.coli, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top", axis.title.y.left = element_text(size=11, face = "bold"))  
+
+p1a
+```
+
+# Distribution of L.acidophilus Abundances
+```{r}
+p2a <- ggplot(data = Samples.2, aes(x=Group, y=L.acidophilus, fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"), axis.text.x=element_text(size=10, face = "bold")) + geom_signif(y_position=c(0.0082, 0.006, 0.007, 0.0045, 0.004, 0.0042), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2), annotation=c("4.14e-6*", "0.041*", "0.025*", "0.194", "0.072", "0.091"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.009)
+
+
+
+p2 <- ggplot(data = Samples.2, aes(x=Group, y=L.acidophilus, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.01) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 0.00875, label = "4.14e-6*") +
+annotate("label", x = 2, y = 0.00625, label = "0.041*") +
+annotate("label", x = 3, y = 0.0075, label = "0.025*") +
+annotate("label", x = 4, y = 0.005, label = "0.194") +
+annotate("label", x = 5, y = 0.00375, label = "0.072") +
+annotate("label", x = 6, y = 0.005, label = "0.091") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+#geom_signif(y_position=c(0.03, 0.03, 0.0225, 0.025, 0.015, 0.02), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2), annotation=c("0.075", "0.272", "0.060", "0.365", "0.336", "0.369"), tip_length=0, textsize = 3) 
+
+p2
+
+
+p2
+
+p2a <- ggplot(data = Samples.2, aes(x=Group, y=L.acidophilus, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"), axis.text.x=element_text(size=10, face = "bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.009) 
+
+p2a
+```
+
+```{r}
+p3a <- ggplot(data = Samples.2, aes(x=Group, y=B.thetaiotaomicron,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of B.thetaiotaomicron Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"), axis.text.x=element_text(size=10, face="bold")) + geom_signif(y_position=c(0.002, 0.0021, 0.00175, 0.00075, 0.00075, 0.0011), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2), annotation=c("0.257", "0.120", "0.689", "0.185", "0.070", "0.579"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.00225) 
+
+
+p3 <- ggplot(data = Samples.2, aes(x=Group, y=B.thetaiotaomicron, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.00275) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 0.0025, label = "0.257") +
+annotate("label", x = 2, y = 0.0025, label = "0.120") +
+annotate("label", x = 3, y = 0.002, label = "0.689") +
+annotate("label", x = 4, y = 0.001, label = "0.185") +
+annotate("label", x = 5, y = 0.001, label = "0.070") +
+annotate("label", x = 6, y = 0.0015, label = "0.579") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+
+p3
+
+p3a <- ggplot(data = Samples.2, aes(x=Group, y=B.thetaiotaomicron,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of B.thetaiotaomicron Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"), axis.text.x=element_text(size=10, face="bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.00225) 
+
+p3a
+```
+
+```{r}
+Samples.2$Sample <- row.names(Samples.2)
+
+Samples.4way <- c("X29_S17_Abundance", "X53_S35_Abundance", "X77_S26_Abundance", "X101_S31_Abundance", "X37_S12_Abundance", "X61_S25_Abundance", "X85_S25_Abundance", "X26_S2_Abundance", "X50_S20_Abundance", "X74_S2_Abundance", "X98_S14_Abundance", "X34_S9_Abundance", "X58_S22_Abundance", "X82_S2_Abundance")
+Samples.3 <- subset(Samples.2, !(Samples.2$Sample %in% Samples.4way))
+
+p4aa <- ggplot(data = Samples.3, aes(x=Group, y=E.rectale,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of E.rectale Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, face = "bold")) + geom_signif(y_position=c(0.0006, 0.0005, 0.0005, 0.001), xmin=c(0.8, 1.8, 2.8, 3.8), xmax=c(1.2, 2.2, 3.2, 4.2), annotation=c("0.0008*", "0.939", "0.002*", "0.835"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.0011) 
+
+
+p4 <- ggplot(data = Samples.3, aes(x=Group, y=E.rectale, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.0011) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 6e-4, label = "0.0008*") +
+annotate("label", x = 2, y = 4.5e-4, label = "0.939") +
+annotate("label", x = 3, y = 4.5e-4, label = "0.002*") +
+annotate("label", x = 4, y = 10.5e-4, label = "0.835") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+
+p4
+
+p4a <- ggplot(data = Samples.3, aes(x=Group, y=E.rectale,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of E.rectale Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, face = "bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.0011) 
+
+p4a
+```
+
+```{r}
+p5aa <- ggplot(data = Samples.3, aes(x=Group, y=B.fragilis,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of B.fragilis Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, face = "bold")) + geom_signif(y_position=c(0.009, 0.0085, 0.004, 0.0041), xmin=c(0.8, 1.8, 2.8, 3.8), xmax=c(1.2, 2.2, 3.2, 4.2), annotation=c("0.037*", "0.465", "0.061", "0.002*"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.0095) 
+
+p5 <- ggplot(data = Samples.3, aes(x=Group, y=B.fragilis, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.01) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 0.00875, label = "0.037*") +
+annotate("label", x = 2, y = 0.00875, label = "0.465") +
+annotate("label", x = 3, y = 0.005, label = "0.061") +
+annotate("label", x = 4, y = 0.005, label = "0.002*") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+
+p5
+
+p5a <- ggplot(data = Samples.3, aes(x=Group, y=B.fragilis,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of B.fragilis Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, face = "bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.0095) 
+
+
+p5a
+```
+
+```{r}
+GFP.6way.24hr <- c("X30_S32_Abundance", "X54_S36_Abundance", "X78_S27_Abundance", "X102_S32_Abundance")
+GFP.6way.inoc <- c("X38_S13_Abundance", "X62_S26_Abundance", "X86_S6_Abundance")
+WT.6way.24hr <- c("X27_S15_Abundance", "X51_S21_Abundance", "X75_S24_Abundance", "X99_S29_Abundance")
+WT.6way.inoc <- c("X35_S10_Abundance", "X59_S23_Abundance", "X83_S27_Abundance")
+
+Samples.6way <- c("X30_S32_Abundance", "X54_S36_Abundance", "X78_S27_Abundance", "X102_S32_Abundance", "X38_S13_Abundance", "X62_S26_Abundance", "X86_S6_Abundance", "X27_S15_Abundance", "X51_S21_Abundance", "X75_S24_Abundance", "X99_S29_Abundance", "X35_S10_Abundance", "X59_S23_Abundance", "X83_S27_Abundance")
+Samples.4 <- subset(Samples.3, !(Samples.3$Sample %in% Samples.6way))
+
+p6aa <- ggplot(data = Samples.4, aes(x=Group, y=B.ovatus,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of B.ovatus Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"), axis.text.x=element_text(size=10, face = "bold")) + geom_signif(y_position=c(0.0057, 0.0028), xmin=c(0.8, 1.8), xmax=c(1.2, 2.2), annotation=c("0.142", "0.591"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.006) 
+
+p6 <- ggplot(data = Samples.4, aes(x=Group, y=B.ovatus, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.0075) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 0.006, label = "0.142") +
+annotate("label", x = 2, y = 0.004, label = "0.591") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+
+p6
+
+p6a <- ggplot(data = Samples.4, aes(x=Group, y=B.ovatus,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of B.ovatus Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"), axis.text.x=element_text(size=10, face = "bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.006) 
+
+p6a
+```
+
+```{r}
+p7aa <- ggplot(data = Samples.4, aes(x=Group, y=F.prausnitzii,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of F.prausnitzii Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, face = "bold")) + geom_signif(y_position=c(0.0073, 0.0068), xmin=c(0.8, 1.8), xmax=c(1.2, 2.2), annotation=c("0.001*", "0.0007*"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.008) 
+
+p7 <- ggplot(data = Samples.4, aes(x=Group, y=F.prausnitzii, fill=Time)) + geom_boxplot() + theme_minimal() + labs(y = "Relative Abundance", x=element_blank()) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10))  + theme(axis.text.x=element_text(size=10, face = "bold")) + 
+scale_fill_brewer(palette="Set1") + ylim(0,0.009) + 
+theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") +  
+annotate("label", x = 1, y = 0.00875, label = "0.001*") +
+annotate("label", x = 2, y = 0.0075, label = "0.0007*") +
+theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15"), axis.text.x=element_text(size=13, color = "black", face = "bold"), axis.text.y=element_text(size=13, color = "black"), axis.title.y = element_text(size = 15, colour = "black", face = "bold")) + theme(legend.title = element_text(size=14, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13)
+  )
+
+p7
+
+p7a <- ggplot(data = Samples.4, aes(x=Group, y=F.prausnitzii,fill=Time)) + geom_boxplot() + theme_minimal() + labs(title = "Distribution of F.prausnitzii Abundances",y = "Relative Abundance", x=element_blank()) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, face = "bold")) + scale_fill_brewer(palette="Set1") + theme(legend.title = element_text(size=11, face = "bold"), legend.position="top") + ylim(0,0.008) 
+
+p7a
+```
+
+#### T-Tests comparing 0hr and 24hr for each commensal within each group(4way-WT, 4way-GFP, etc.)
+
+#### GFP-4way 0hr vs 24hr for E.coli, L.acidophilus, B.thetaiotaomicron
+```{r}
+GFP_4way_samples <- c("X29_S17_Abundance", "X53_S35_Abundance", "X77_S26_Abundance", "X101_S31_Abundance", "X37_S12_Abundance", "X61_S25_Abundance", "X85_S25_Abundance")
+GFP.all4way <- subset(Samples.2, Samples.2$Sample %in% GFP_4way_samples)
+
+t.test(E.coli ~ Time, data= GFP.all4way, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Time, data= GFP.all4way, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Time, data= GFP.all4way, alternative = c("two.sided"))
+```
+
+#### GFP-6way 0hr vs 24hr for E.coli, L.acidophilus, B.thetaiotaomicron
+```{r}
+GFP_6way_samples <- c("X30_S32_Abundance", "X54_S36_Abundance", "X78_S27_Abundance", "X102_S32_Abundance", "X38_S13_Abundance", "X62_S26_Abundance", "X86_S6_Abundance")
+GFP.all6way <- subset(Samples.2, Samples.2$Sample %in% GFP_6way_samples)
+
+t.test(E.coli ~ Time, data= GFP.all6way, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Time, data= GFP.all6way, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Time, data= GFP.all6way, alternative = c("two.sided"))
+t.test(E.rectale ~ Time, data= GFP.all6way, alternative = c("two.sided"))
+t.test(B.fragilis ~ Time, data= GFP.all6way, alternative = c("two.sided"))
+```
+
+#### GFP-8way 0hr vs 24hr for E.coli, L.acidophilus, B.thetaiotaomicron
+```{r}
+GFP_8way_samples <- c("X31_S19_Abundance",  "X55_S37_Abundance", "X79_S28_Abundance", "X103_S33_Abundance", "X39_S5_Abundance","X63_S27_Abundance", "X87_S5_Abundance")
+GFP.all8way <- subset(Samples.2, Samples.2$Sample %in% GFP_8way_samples)
+
+t.test(E.coli ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+t.test(E.rectale ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+t.test(B.fragilis ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+t.test(B.ovatus ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+t.test(F.prausnitzii ~ Time, data= GFP.all8way, alternative = c("two.sided"))
+```
+
+#### WT-4way 0hr vs 24hr for E.coli, L.acidophilus, B.thetaiotaomicron
+```{r}
+WT_4way_samples <- c("X26_S2_Abundance", "X50_S20_Abundance", "X74_S2_Abundance", "X98_S14_Abundance", "X34_S9_Abundance", "X58_S22_Abundance", "X82_S2_Abundance")
+WT.all4way <- subset(Samples.2, Samples.2$Sample %in% WT_4way_samples)
+
+t.test(E.coli ~ Time, data= WT.all4way, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Time, data= WT.all4way, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Time, data= WT.all4way, alternative = c("two.sided"))
+```
+
+#### WT-6way 0hr vs 24hr for E.coli, L.acidophilus, B.thetaiotaomicron
+```{r}
+WT_6way_samples <- c("X27_S15_Abundance", "X51_S21_Abundance", "X75_S24_Abundance", "X99_S29_Abundance", "X35_S10_Abundance", "X59_S23_Abundance", "X83_S27_Abundance")
+WT.all6way <- subset(Samples.2, Samples.2$Sample %in% WT_6way_samples)
+
+t.test(E.coli ~ Time, data= WT.all6way, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Time, data= WT.all6way, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Time, data= WT.all6way, alternative = c("two.sided"))
+t.test(E.rectale ~ Time, data= WT.all6way, alternative = c("two.sided"))
+t.test(B.fragilis ~ Time, data= WT.all6way, alternative = c("two.sided"))
+```
+
+#### WT-8way 0hr vs 24hr for E.coli, L.acidophilus, B.thetaiotaomicron
+```{r}
+WT_8way_samples <- c("X28_S16_Abundance", "X52_S34_Abundance", "X76_S25_Abundance", "X100_S30_Abundance", "X36_S11_Abundance", "X60_S24_Abundance", "X84_S4_Abundance")
+WT.all8way <- subset(Samples.2, Samples.2$Sample %in% WT_8way_samples)
+
+t.test(E.coli ~ Time, data= WT.all8way, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Time, data= WT.all8way, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Time, data= WT.all8way, alternative = c("two.sided"))
+t.test(E.rectale ~ Time, data= WT.all8way, alternative = c("two.sided"))
+t.test(B.fragilis ~ Time, data= WT.all8way, alternative = c("two.sided"))
+t.test(B.ovatus ~ Time, data= WT.all8way, alternative = c("two.sided"))
+t.test(F.prausnitzii ~ Time, data= WT.all8way, alternative = c("two.sided"))
+```
+
+#### Below is boxplot using melted dataset
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples_4way.T <- rbind(GFP.4way.24.T, WT.4way.24.T) 
+colnames(Hour24_Samples_4way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+Hour24_Samples_4way2.T <-Hour24_Samples_4way.T[,c("E.coli","B.thetaiotaomicron","L.acidophilus","Group")]
+Hour24_4waySamples.forBoxplot <- melt(Hour24_Samples_4way2.T, id = "Group")
+
+p1bb <- ggplot(data = Hour24_4waySamples.forBoxplot, aes(x=variable, y=value, fill=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 4-way Samples at Hour 24",y = "Relative Abundance",x = "") + theme(plot.title = element_text(hjust = 0.5), axis.text.x=element_text(size=10, angle=-45)) + geom_signif(y_position=c(0.032, 0.006, 0.005), xmin=c(0.8, 1.8,2.8), xmax=c(1.2, 2.2,3.2), annotation=c("0.834", "0.339", "0.117"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Dark2") 
+
+p1b <- ggplot(data = Hour24_4waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=14, angle=-45, face = "bold.italic", colour = "black", hjust = 0)) + theme(axis.title.y.left = element_text(size=15, face = "bold"), axis.text.y = element_text(size = 11, colour = "black")) +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.0275) + theme(legend.title = element_text(size=15, face = "bold")) + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15")) + theme(legend.title = element_text(size=15, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.01, label = "0.117") +
+  annotate("label", x = 2, y = 0.01, label = "0.339") +
+  annotate("label", x = 3, y = 0.035, label = "0.834") + ylim(0,0.04) 
+
+
+p1b
+```
+
+#### T tests for GFP vs WT of all species in 4way 24 groups
+```{r}
+t.test(B.thetaiotaomicron ~ Group, data= Hour24_Samples_4way2.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Hour24_Samples_4way2.T, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Group, data= Hour24_Samples_4way2.T, alternative = c("two.sided"))  
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples_6way.T <- rbind(GFP.6way.24.T, WT.6way.24.T) 
+colnames(Hour24_Samples_6way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+Hour24_Samples_6way2.T <- Hour24_Samples_6way.T[,c("E.coli","B.thetaiotaomicron","L.acidophilus","E.rectale","B.fragilis","Group")]
+Hour24_6waySamples.forBoxplot <- melt(Hour24_Samples_6way2.T, id = "Group")
+
+
+p1c1 <- ggplot(data = Hour24_6waySamples.forBoxplot, aes(x=variable, y=value, fill=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 6-way Samples at Hour 24",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5), axis.text.x=element_text(size=10, angle=-45)) + geom_signif(y_position=c(0.02, 0.004, 0.0025, 0.0025, 0.01), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2), annotation=c("0.431", "0.171", "0.318", "0.0287*", "0.466"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Dark2") 
+
+p1c <- ggplot(data = Hour24_6waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=14, angle=-45, face = "bold.italic", colour = "black", hjust = 0)) + theme(axis.title.y.left = element_text(size=15, face = "bold"), axis.text.y = element_text(size = 11, colour = "black")) +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.025) + theme(legend.title = element_text(size=15, face = "bold")) + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15")) + theme(legend.title = element_text(size=15, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.005, label =  "0.029*") +
+  annotate("label", x = 2, y = 0.005, label =  "0.318") +
+  annotate("label", x = 3, y = 0.005, label = "0.171") +
+  annotate("label", x = 4, y = 0.0125, label = "0.466") +
+  annotate("label", x = 5, y = 0.0225, label = "0.431") 
+
+p1c
+```
+
+#### T tests for GFP vs WT of all species in 6way 24 groups
+```{r}
+t.test(B.fragilis ~ Group, data= Hour24_Samples_6way2.T, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Group, data= Hour24_Samples_6way2.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Hour24_Samples_6way2.T, alternative = c("two.sided"))
+t.test(E.rectale ~ Group, data= Hour24_Samples_6way2.T, alternative = c("two.sided"))
+t.test(L.acidophilus ~ Group, data= Hour24_Samples_6way2.T, alternative = c("two.sided"))  
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples_8way.T <- rbind(GFP.8way.24.T, WT.8way.24.T) 
+colnames(Hour24_Samples_8way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group","Group2")
+Hour24_Samples_8way2.T <- Hour24_Samples_8way.T[,c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group")]
+Hour24_8waySamples.forBoxplot <- melt(Hour24_Samples_8way2.T, id = "Group")
+
+p1d1 <- ggplot(data = Hour24_8waySamples.forBoxplot, aes(x=variable, y=value, fill=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 8-way Samples at Hour 24",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5)) + theme(axis.text.x=element_text(size=10, angle=-45)) + geom_signif(y_position=c(0.006, 0.007, 0.0026, 0.022, 0.0026, 0.004, 0.0025), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8, 6.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2), annotation=c("0.663", "0.545", "0.629", "0.200", "0.425", "0.141", "0.660"), tip_length=0, textsize = 3) + scale_fill_brewer(palette="Dark2") 
+
+p1d <- ggplot(data = Hour24_8waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_bw() + labs(y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=14, angle=-45, face = "bold.italic", colour = "black", hjust = 0)) + theme(axis.title.y.left = element_text(size=15, face = "bold", color = "black"), axis.text.y = element_text(size = 11, colour = "black")) +
+scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.025) + theme(legend.title = element_text(size=15, face = "bold")) + theme(panel.grid.major = element_line(size = 0.3, linetype = 'solid', colour = "gray55"), panel.grid.minor = element_line(size = 0.15, linetype = 'solid', colour = "gray55"), panel.background = element_rect(color="gray15")) + theme(legend.title = element_text(size=15, face = "bold", hjust = 0.50)) + 
+  theme(
+    legend.position = "top",
+    legend.key.size = unit(3, "lines"),
+    legend.text = element_text(size = 13.5)
+  ) + 
+  annotate("label", x = 1, y = 0.005, label = "0.392") +
+  annotate("label", x = 2, y = 0.005, label = "0.387") +
+  annotate("label", x = 3, y = 0.005, label = "0.491") +
+  annotate("label", x = 4, y = 0.005, label = "0.642") +
+  annotate("label", x = 5, y = 0.01, label = "0.075") +
+  annotate("label", x = 6, y = 0.01, label = "0.188") +
+  annotate("label", x = 7, y = 0.0225, label = "0.577") 
+
+p1d
+```
+
+#### T tests for GFP vs WT of all species in 8way 24 groups
+```{r}
+t.test(B.fragilis ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))
+t.test(B.ovatus ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))
+t.test(E.rectale ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))
+t.test(F.prausnitzii ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))  
+t.test(L.acidophilus ~ Group, data= Hour24_Samples_8way.T, alternative = c("two.sided"))  
+```
+
+#### Below is boxplot using melted dataset for Hour 24
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples_4way.T <- rbind(GFP.4way.24.T, WT.4way.24.T) 
+colnames(Hour24_Samples_4way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+Hour24_Samples_4way2.T <- Hour24_Samples_4way.T[,c("E.coli","B.thetaiotaomicron","L.acidophilus","Group")]
+Hour24_4waySamples.forBoxplot <- melt(Hour24_Samples_4way2.T, id = "Group")
+
+p1b <- ggplot(data = Hour24_4waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 4-way Samples at Hour 24",y = "Relative Abundance",x = "") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + geom_signif(y_position=c(0.005, 0.006, 0.031), xmin=c(0.8, 1.8,2.8), xmax=c(1.2, 2.2,3.2), annotation=c("0.117", "0.339","0.834"), tip_length=0, textsize = 3, color="black") + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.034) + theme(legend.title = element_text(size=11, face = "bold"))
+
+p1b
+
+
+p1bb <- ggplot(data = Hour24_4waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 4-way Samples at Hour 24",y = "Relative Abundance",x = "") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.034) + theme(legend.title = element_text(size=11, face = "bold"))
+
+p1bb
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples_6way.T <- rbind(GFP.6way.24.T, WT.6way.24.T) 
+colnames(Hour24_Samples_6way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group", "Group2")
+Hour24_Samples_6way2.T <- Hour24_Samples_6way.T[,c("E.coli","B.thetaiotaomicron","L.acidophilus","E.rectale","B.fragilis","Group")]
+Hour24_6waySamples.forBoxplot <- melt(Hour24_Samples_6way2.T, id = "Group")
+
+
+p1c <- ggplot(data = Hour24_6waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 6-way Samples at Hour 24",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + geom_signif(y_position=c(0.0035, 0.0035, 0.005, 0.01, 0.021), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2), annotation=c("0.029*", "0.318", "0.171", "0.466", "0.431"), tip_length=0, textsize = 3, color="black") + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.022) + theme(legend.title = element_text(size=11, face = "bold"))
+
+p1c
+
+p1cc <- ggplot(data = Hour24_6waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 6-way Samples at Hour 24",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 15), axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.022) + theme(legend.title = element_text(size=11, face = "bold")) 
+
+p1cc
+```
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+Hour24_Samples_8way.T <- rbind(GFP.8way.24.T, WT.8way.24.T) 
+colnames(Hour24_Samples_8way.T ) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group","Group2")
+Hour24_Samples_8way2.T <- Hour24_Samples_8way.T[,c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group")]
+Hour24_8waySamples.forBoxplot <- melt(Hour24_Samples_8way2.T, id = "Group")
+
+p1d <- ggplot(data = Hour24_8waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 8-way Samples at Hour 24",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) + theme(axis.text.x=element_text(size=10, angle=-45, face = "bold")) + geom_signif(y_position=c(0.0025, 0.003, 0.0025, 0.0025, 0.006, 0.005, 0.0135), xmin=c(0.8, 1.8, 2.8, 3.8, 4.8, 5.8, 6.8), xmax=c(1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2), annotation=c("0.392", "0.387", "0.491", "0.642", "0.075", "0.188","0.577"), tip_length=0, textsize = 3, color="black") + theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.014) + theme(legend.title = element_text(size=11, face = "bold"))  
+
+p1d
+
+p1dd <- ggplot(data = Hour24_8waySamples.forBoxplot, aes(x=reorder(variable, value, FUN = median), y=value, fill=Group, color=Group)) + geom_boxplot() + theme_minimal() + labs(title = "Species Abundances in 8-way Samples at Hour 24",y = "Relative Abundance", x="") + theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) + theme(axis.text.x=element_text(size=10, angle=-45, face = "bold")) + theme(axis.title.y.left = element_text(size=11, face = "bold")) + scale_fill_brewer(palette="Dark2") + scale_color_brewer(palette="Dark2") + ylim(0,0.014) + theme(legend.title = element_text(size=11, face = "bold"))  
+
+p1dd
+```
+
+## t-test corresponding to PCA visuals
+
+#### B.fragilis (WT vs GFP) [All Samples]
+```{r}
+library(stats)
+t.test(B.fragilis ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+#### B.ovatus (WT vs GFP) [All Samples]
+```{r}
+t.test(B.ovatus ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+#### B.thetaiotaomicron (WT vs GFP) [All Samples]
+```{r}
+t.test(B.thetaiotaomicron ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+#### E.coli (WT vs GFP) [All Samples]
+```{r}
+t.test(E.coli ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+#### E.rectale (WT vs GFP) [All Samples]
+```{r}
+t.test(E.rectale ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+#### F.prausnitzii (WT vs GFP) [All Samples]
+```{r}
+t.test(F.prausnitzii ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+#### L.acidophilus (WT vs GFP) [All Samples]
+```{r}
+t.test(L.acidophilus ~ Group2, data = All_Samples2.T, alternative = c("two.sided"))
+```
+
+
+
+
+#### B.fragilis (WT vs GFP) [Inoculation Samples]
+```{r}
+library(stats)
+t.test(B.fragilis ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+#### B.ovatus (WT vs GFP) [Inoculation Samples]
+```{r}
+t.test(B.ovatus ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+#### B.thetaiotaomicron (WT vs GFP) [Inoculation Samples]
+```{r}
+t.test(B.thetaiotaomicron ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+#### E.coli (WT vs GFP) [Inoculation Samples]
+```{r}
+t.test(E.coli ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+#### E.rectale (WT vs GFP) [Inoculation Samples]
+```{r}
+t.test(E.rectale ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+#### F.prausnitzii (WT vs GFP) [Inoculation Samples]
+```{r}
+t.test(F.prausnitzii ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+#### L.acidophilus (WT vs GFP) [Inoculation Samples]
+```{r}
+t.test(L.acidophilus ~ Group2, data = Inoc_Samples2.T, alternative = c("two.sided"))
+```
+
+
+
+
+#### B.fragilis (WT vs GFP) [Hour 24 Samples]
+```{r}
+library(stats)
+t.test(B.fragilis ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+#### B.ovatus (WT vs GFP) [Hour 24 Samples]
+```{r}
+t.test(B.ovatus ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+#### B.thetaiotaomicron (WT vs GFP) [Hour 24 Samples]
+```{r}
+t.test(B.thetaiotaomicron ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+#### E.coli (WT vs GFP) [Hour 24 Samples]
+```{r}
+t.test(E.coli ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+#### E.rectale (WT vs GFP) [Hour 24 Samples]
+```{r}
+t.test(E.rectale ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+#### F.prausnitzii (WT vs GFP) [Hour 24 Samples]
+```{r}
+t.test(F.prausnitzii ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+#### L.acidophilus (WT vs GFP) [Hour 24 Samples]
+```{r}
+t.test(L.acidophilus ~ Group2, data = Hour24_Samples2.T, alternative = c("two.sided"))
+```
+
+
+
+```{r}
+Inoc.samples <- c("X40_S14_Abundance", "X57_S21_Abundance", "X81_S1_Abundance", "X39_S5_Abundance","X63_S27_Abundance", "X87_S5_Abundance", "X37_S12_Abundance", "X61_S25_Abundance", "X85_S25_Abundance", "X38_S13_Abundance", "X62_S26_Abundance", "X86_S6_Abundance", "X36_S11_Abundance", "X60_S24_Abundance", "X84_S4_Abundance", "X34_S9_Abundance", "X58_S22_Abundance", "X82_S2_Abundance", "X35_S10_Abundance", "X59_S23_Abundance", "X83_S27_Abundance")
+
+
+Hr24.samples <- c("X25_S8_Abundance", "X56_S38_Abundance", "X73_S23_Abundance", "X97_S13_Abundance", "X31_S19_Abundance",  "X55_S37_Abundance", "X79_S28_Abundance", "X103_S33_Abundance", "X29_S17_Abundance", "X53_S35_Abundance", "X77_S26_Abundance", "X101_S31_Abundance", "X30_S32_Abundance", "X54_S36_Abundance", "X78_S27_Abundance", "X102_S32_Abundance", "X28_S16_Abundance", "X52_S34_Abundance", "X76_S25_Abundance", "X100_S30_Abundance", "X26_S2_Abundance", "X50_S20_Abundance", "X74_S2_Abundance", "X98_S14_Abundance", "X27_S15_Abundance", "X51_S21_Abundance", "X75_S24_Abundance", "X99_S29_Abundance")
+
+All_Samples2.T$Group3 <- NA
+
+All_Samples2.T[which(rownames(All_Samples2.T) %in% Inoc.samples),"Group3"] <- "Inoculation"
+All_Samples2.T[which(rownames(All_Samples2.T) %in% Hr24.samples),"Group3"] <- "24h"
+```
+
+```{r}
+All_Samples.pca <- prcomp(All_Samples2.T[,2:(ncol(All_Samples2.T)-3)], center = TRUE,scale. = TRUE)
+
+ggbiplot(All_Samples.pca, obs.scale = 1, var.scale = 1, group=All_Samples2.T$Group2, 
+         var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE, circle.prob = 0.95) +
+scale_color_manual(name="E.coli Type", values=colors6) +  
+scale_shape_manual(name="Time Sample Collected", values=c(15:20)) +
+geom_point(aes(shape = All_Samples2.T$Group3, colour = All_Samples2.T$Group2), size = 3) +
+theme(legend.direction ="horizontal", legend.position = "top") + 
+theme_bw() +
+  #ggtitle("PCA on All Inoculation & Hour 24 Samples") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) +
+  theme(legend.title = element_text(size=11, face = "bold")) +
+  theme(axis.title.x=element_text(size=10,face = "bold")) + 
+  theme(axis.title.y=element_text(size=10,face = "bold"))
+
+
+
+
+
+
+
+ggbiplot(All_Samples.pca, obs.scale = 1, var.scale = 1, group=All_Samples2.T$Group2, 
+         var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE, circle.prob = 0.95) +
+scale_color_manual(name="E.coli Type", values=colors6) +  
+scale_shape_manual(name="Time", values=c(15:20)) +
+geom_point(aes(shape = All_Samples2.T$Group3, colour = All_Samples2.T$Group2), size = 3) +
+  theme_bw() +
+  theme(
+    legend.title = element_text(size=14, face = "bold"),
+    legend.position = "top",
+    legend.key.size = unit(1.2, "lines"),
+    legend.text = element_text(size = 13),
+    axis.title.x=element_text(size=14, face = "bold"),
+    axis.title.y=element_text(size=14,face = "bold")
+  )
+```
+
+```{r}
+ggbiplot(All_Samples.pca, obs.scale = 1, var.scale = 1, group=All_Samples2.T$Group2, 
+         var.axes = FALSE,
+labels.size=3, ellipse = TRUE, ellipse.prob = 0.95, circle = TRUE, circle.prob = 0.95) +
+scale_color_manual(name="E.coli Type", values=colors6) +  
+#scale_shape_manual(name="Time Sample Collected", values=c(15:20)) +
+geom_point(aes(#shape = All_Samples2.T$Group3, 
+               colour = All_Samples2.T$Group2), size = 3) +
+theme(legend.direction ="horizontal", legend.position = "top") + 
+theme_minimal() +
+  ggtitle("PCA on All Inoculation & Hour 24 Samples") +
+  theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold")) +
+  theme(legend.title = element_text(size=11, face = "bold")) +
+  theme(axis.title.x=element_text(size=10,face = "bold")) + 
+  theme(axis.title.y=element_text(size=10,face = "bold"))
+```
+
+
