@@ -1,0 +1,67 @@
+---
+title: "TestBed Microbiome Sequencing Data Processing"
+author: "Grace Jimenez"
+date: "3/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = '', message = FALSE, warning = FALSE)
+```
+
+#### Import all bacterial abundance tables and aggregate by sample to determine total abundance (of selected organism) per sample.  Removed sample 93 (blank).
+```{r}
+Gene_Families <- read.csv("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_genefamilies.csv")
+
+BacterialSet_total <- as.data.frame(aggregate(Gene_Families[,5:ncol(Gene_Families)], by=list(Species=Gene_Families$Species), FUN=sum))
+
+BacterialSet_total <- BacterialSet_total %>% filter(Species != "unclassified") %>% select(-c(X93_S11_Abundance)) %>% replace(., is.na(.), 0)
+```
+
+#### Aggregate by condition to determine total abundance (of selected organism) per condition (GFP 8way, GFP 4way, WT 8way, WT 4way). 
+```{r}
+GFP.8way.24hr <- c("X31_S19_Abundance",  "X55_S37_Abundance", "X79_S28_Abundance", "X103_S33_Abundance")
+GFP.8way.inoc <- c("X39_S5_Abundance","X63_S27_Abundance", "X87_S5_Abundance")
+GFP.4way.24hr <- c("X29_S17_Abundance", "X53_S35_Abundance", "X77_S26_Abundance", "X101_S31_Abundance")
+GFP.4way.inoc <- c("X37_S12_Abundance", "X61_S25_Abundance", "X85_S25_Abundance" )
+                                                                                                                 WT.8way.24hr <- c("X28_S16_Abundance", "X52_S34_Abundance", "X76_S25_Abundance", "X100_S30_Abundance") 
+WT.8way.inoc <- c("X36_S11_Abundance", "X60_S24_Abundance", "X84_S4_Abundance")
+WT.4way.24hr <- c("X26_S2_Abundance", "X50_S20_Abundance", "X74_S2_Abundance", "X98_S14_Abundance") 
+WT.4way.inoc <- c("X34_S9_Abundance", "X58_S22_Abundance", "X82_S2_Abundance")
+
+GFP_8way_24 <- as.data.frame(aggregate(BacterialSet_total[,GFP.8way.24hr], by=list(Species=BacterialSet_total$Species), FUN=sum))
+WT_8way_24 <- as.data.frame(aggregate(BacterialSet_total[,WT.8way.24hr], by=list(Species=BacterialSet_total$Species), FUN=sum))
+GFP_4way_24 <- as.data.frame(aggregate(BacterialSet_total[,GFP.4way.24hr], by=list(Species=BacterialSet_total$Species), FUN=sum))
+WT_4way_24 <- as.data.frame(aggregate(BacterialSet_total[,WT.4way.24hr], by=list(Species=BacterialSet_total$Species), FUN=sum))
+
+GFP_8way_inoc <- as.data.frame(aggregate(BacterialSet_total[,GFP.8way.inoc], by=list(Species=BacterialSet_total$Species), FUN=sum))
+WT_8way_inoc <- as.data.frame(aggregate(BacterialSet_total[,WT.8way.inoc], by=list(Species=BacterialSet_total$Species), FUN=sum)) 
+GFP_4way_inoc <- as.data.frame(aggregate(BacterialSet_total[,GFP.4way.inoc], by=list(Species=BacterialSet_total$Species), FUN=sum)) 
+WT_4way_inoc <- as.data.frame(aggregate(BacterialSet_total[,WT.4way.inoc], by=list(Species=BacterialSet_total$Species), FUN=sum))   
+```
+
+### Determined sum of all bacterial abundance measures for each sample
+```{r}
+library(reshape2)
+GFP_8way_inoc$Species_Overall <- c(rowSums(GFP_8way_inoc[,2:ncol(GFP_8way_inoc)]))
+GFP_4way_inoc$Species_Overall <- c(rowSums(GFP_4way_inoc[,2:ncol(GFP_4way_inoc)]))
+GFP_8way_24$Species_Overall <- c(rowSums(GFP_8way_24[,2:ncol(GFP_8way_24)]))
+GFP_4way_24$Species_Overall <- c(rowSums(GFP_4way_24[,2:ncol(GFP_4way_24)]))
+WT_8way_inoc$Species_Overall <- c(rowSums(WT_8way_inoc[,2:ncol(WT_8way_inoc)]))
+WT_4way_inoc$Species_Overall <- c(rowSums(WT_4way_inoc[,2:ncol(WT_4way_inoc)]))
+WT_8way_24$Species_Overall <- c(rowSums(WT_8way_24[,2:ncol(WT_8way_24)]))
+WT_4way_24$Species_Overall <- c(rowSums(WT_4way_24[,2:ncol(WT_4way_24)]))
+```
+
+```{r}
+library(dplyr)
+GFP.WT.468way.inoc1 <- full_join(GFP_8way_inoc[,c("Species","Species_Overall")], WT_8way_inoc[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.inoc2 <- full_join(GFP.WT.468way.inoc1, GFP_4way_inoc[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.inoc <- full_join(GFP.WT.468way.inoc2, WT_4way_inoc[,c("Species","Species_Overall")], by="Species")
+colnames(GFP.WT.468way.inoc) <- c("Species","GFP.8way","WT.8way","GFP.4way","WT.4way")
+
+GFP.WT.468way.24.1 <- full_join(GFP_8way_24[,c("Species","Species_Overall")], WT_8way_24[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.24.2 <- full_join(GFP.WT.468way.24.1, GFP_4way_24[,c("Species","Species_Overall")], by="Species")
+GFP.WT.468way.24 <- full_join(GFP.WT.468way.24.2, WT_4way_24[,c("Species","Species_Overall")], by="Species")
+colnames(GFP.WT.468way.24) <- c("Species","GFP.8way","WT.8way","GFP.4way","WT.4way")
+```
