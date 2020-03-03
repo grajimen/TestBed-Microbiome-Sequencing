@@ -1,6 +1,5 @@
 ---
 title: "TestBed Microbiome Sequencing Data Processing"
-author: "Grace Jimenez"
 output: html_document
 ---
 
