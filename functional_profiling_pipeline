@@ -1,0 +1,60 @@
+source activate conda2
+
+cd "/home/wlyon/Desktop/army\ 8way"
+
+mkdir -p humann2_RESULTS
+mkdir -p kneaddata_RESULTS
+mkdir -p merged_Fastq
+
+for file in `ls -1 *_L001_R1_001.fastq | sed 's/_L001_R1_001.fastq//' ` 
+do
+kneaddata --input ${file}_L001_R1_001.fastq --input ${file}_L001_R2_001.fastq --reference-db "$KNEAD_DATABASE" --output kneaddata_RESULTS &> log_kneaddata_RESULTS.out
+done
+
+
+
+for file in `ls -1 *_L001_R1_001.fastq | sed 's/_L001_R1_001.fastq//' ` 
+do
+cat ${file}_L001_R1_001.fastq ${file}_L001_R2_001.fastq > merged_Fastq/${file}.fastq
+done
+
+
+
+cd "/home/wlyon/Desktop/army\ 8way/merged_Fastq"
+for file in ./*.fastq
+do
+humann2 --input $file --output humann2_RESULTS
+done
+
+
+
+for ${file}_genefamilies.tsv in humann2_RESULTS
+do
+humann2_renorm_table --input ${file}_genefamilies.tsv --output ${file}_genefamilies_relab.tsv --units relab
+done
+
+
+
+humann2_join_tables --input /home/wlyon/Desktop/army\ 8way/merged_Fastq/humann2_RESULTS --output humann2_genefamilies.tsv --file_name genefamilies_relab
+
+humann2_join_tables --input /home/wlyon/Desktop/army\ 8way/merged_Fastq/humann2_RESULTS --output humann2_pathcoverage.tsv --file_name pathcoverage
+
+humann2_join_tables --input /home/wlyon/Desktop/army\ 8way/merged_Fastq/humann2_RESULTS --output humann2_pathabundance.tsv --file_name pathabundance_relab
+
+
+
+
+
+
+
+
+
+
+
+
+#pathway alignment, first DNA, then metatranscriptome rna
+humann2 --input "out_kneaddata/${dna1_base}_kneaddata_paired_1.fastq" --threads $threads --output out_humann2 &> log_humann2_dna.out
+humann2 --input "out_kneaddata/${rna1_base}_kneaddata_paired_1.fastq" \
+	--taxonomic-profile "out_humann2/${dna1_base}_kneaddata_paired_1_humann2_temp/${dna1_base}_kneaddata_paired_1_metaphlan_bugs_list.tsv" \
+	--threads $threads --output out_humann2 &> log_humann2_rna.out
+
