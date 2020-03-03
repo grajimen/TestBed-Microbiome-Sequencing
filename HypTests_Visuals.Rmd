@@ -1,0 +1,165 @@
+---
+title: "HypothesisTests_Visuals"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Melting data
+```{r}
+GFP.WT.468way.inoc[8,] <- c(0, sum(GFP.WT.468way.inoc[,2]), sum(GFP.WT.468way.inoc[,3]), sum(GFP.WT.468way.inoc[,4]), sum(GFP.WT.468way.inoc[,5]))
+
+
+for (j in 2:5){
+for (i in 1:5){
+GFP.WT.468way.inoc[i, j] <- (GFP.WT.468way.inoc[i, j] / GFP.WT.468way.inoc[6,j]) * 100   
+}  
+}
+
+Totals.GFP.WT.468way.inoc <- melt(GFP.WT.468way.inoc, id = "Species")
+Totals.GFP.WT.468way.inoc <- na.omit(Totals.GFP.WT.468way.inoc)
+Totals.GFP.WT.468way.inocV2 <- subset(Totals.GFP.WT.468way.inoc, Totals.GFP.WT.468way.inoc$Species != 0)
+
+
+GFP.WT.468way.24[6,] <- c(0, sum(GFP.WT.468way.24[,2]), sum(GFP.WT.468way.24[,3]), sum(GFP.WT.468way.24[,4]), sum(GFP.WT.468way.24[,5]))
+
+for (j in 2:5){
+for (i in 1:5){
+GFP.WT.468way.24[i, j] <- (GFP.WT.468way.24[i, j] / GFP.WT.468way.24[6,j])  * 100  
+}  
+}
+
+Totals.GFP.WT.468way.24 <- melt(GFP.WT.468way.24, id = "Species")
+Totals.GFP.WT.468way.24 <- na.omit(Totals.GFP.WT.468way.24)
+Totals.GFP.WT.468way.24V2 <- subset(Totals.GFP.WT.468way.24, Totals.GFP.WT.468way.24$Species != 0)
+```
+
+# Stacked Barplot
+```{r}
+library(RColorBrewer)
+library(ggplot2)
+colors <- brewer.pal(7,"Dark2")
+colors2 <- brewer.pal(7,"Set1") 
+colors3 <- c("Green3", "Purple2", "DarkOrange", "DarkBlue", "Red2", "Yellow2", "DodgerBlue3")
+colors4 <- c("dodgerblue3", "yellow2", "red2", "darkblue", "darkorange", "purple2", "green3")
+colors5 <- c("dodgerblue3", "green3", "red2", "darkblue", "darkorange", "purple2", "yellow2")
+ggplot(Totals.GFP.WT.468way.inocV2[order(Totals.GFP.WT.468way.inocV2$Species, decreasing = T),], aes(variable, value, fill=factor(Species, levels=c("g__Escherichia.s__Escherichia_coli", "g__Lactobacillus.s__Lactobacillus_acidophilus", "g__Bacteroides.s__Bacteroides_ovatus", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Bacteroides.s__Bacteroides_fragilis", "g__Eubacterium.s__Eubacterium_rectale",  "g__Bacteroides.s__Bacteroides_thetaiotaomicron")))) + geom_bar(stat = "identity") + theme( axis.text.x=element_text(size=10, angle=45))  + labs(title= "Species Abundance (Inoculation)", y="Relative Abundance (%)", x=element_blank()) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank()) + labs(fill="Species") + scale_fill_manual(name = "Species", labels = c("E. coli", "L. acidophilus", "B. ovatus", "F. prausnitzii", "B. fragilis", "E. rectale", "B. theta"), values=colors4) + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+column.names <- c("g__Bacteroides.s__Bacteroides_fragilis", "g__Bacteroides.s__Bacteroides_ovatus", "g__Bacteroides.s__Bacteroides_thetaiotaomicron", "g__Escherichia.s__Escherichia_coli", "g__Eubacterium.s__Eubacterium_rectale", "g__Faecalibacterium.s__Faecalibacterium_prausnitzii", "g__Lactobacillus.s__Lactobacillus_acidophilus")
+
+GFP.4way.inoc.T <- as.data.frame(t(GFP_4way_inoc[,2:(ncol(GFP_4way_inoc)-1)]))
+colnames(GFP.4way.inoc.T) <- column.names
+GFP.4way.inoc.T$Group <- c("GFP-4way")
+GFP.4way.24.T <- as.data.frame(t(GFP_4way_24[,2:(ncol(GFP_4way_24)-1)]))
+colnames(GFP.4way.24.T) <- column.names
+GFP.4way.24.T$Group <- c("GFP-4way")
+
+GFP.8way.inoc.T <- as.data.frame(t(GFP_8way_inoc[,2:(ncol(GFP_8way_inoc)-1)]))
+colnames(GFP.8way.inoc.T) <- column.names
+GFP.8way.inoc.T$Group <- c("GFP-8way")
+GFP.8way.24.T <- as.data.frame(t(GFP_8way_24[,2:(ncol(GFP_8way_24)-1)]))
+colnames(GFP.8way.24.T) <- column.names
+GFP.8way.24.T$Group <- c("GFP-8way")
+
+WT.4way.inoc.T <- as.data.frame(t(WT_4way_inoc[,2:(ncol(WT_4way_inoc)-1)]))
+colnames(WT.4way.inoc.T) <- column.names
+WT.4way.inoc.T$Group <- c("WT-4way")
+WT.4way.24.T <- as.data.frame(t(WT_4way_24[,2:(ncol(WT_4way_24)-1)]))
+colnames(WT.4way.24.T) <- column.names
+WT.4way.24.T$Group <- c("WT-4way")
+
+WT.8way.inoc.T <- as.data.frame(t(WT_8way_inoc[,2:(ncol(WT_8way_inoc)-1)]))
+colnames(WT.8way.inoc.T) <- column.names
+WT.8way.inoc.T$Group <- c("WT-8way")
+WT.8way.24.T <- as.data.frame(t(WT_8way_24[,2:(ncol(WT_8way_24)-1)]))
+colnames(WT.8way.24.T) <- column.names
+WT.8way.24.T$Group <- c("WT-8way")
+
+
+GFP.WT.4way.inoc.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T)
+GFP.WT.4way.24.T <- rbind(GFP.4way.24.T, WT.4way.24.T)
+
+GFP.WT.8way.inoc.T <- rbind(GFP.8way.inoc.T, WT.8way.inoc.T)
+GFP.WT.8way.24.T <- rbind(GFP.8way.24.T, WT.8way.24.T)
+
+Inoc_Samples.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T, GFP.8way.inoc.T, WT.8way.inoc.T) 
+Hour24_Samples.T <- rbind(GFP.4way.24.T, WT.4way.24.T, GFP.8way.24.T, WT.8way.24.T)  
+
+Hour24_Samples2.T <- rbind(GFP.4way.24.T, WT.4way.24.T, GFP.8way.24.T, WT.8way.24.T) 
+colnames(Hour24_Samples2.T) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group")
+
+Inoc_Samples2.T <- rbind(GFP.4way.inoc.T, WT.4way.inoc.T, GFP.8way.inoc.T, WT.8way.inoc.T) 
+colnames(Inoc_Samples2.T) <- c("B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group")
+```
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+
+p1a <- ggplot(data = GFP.WT.4way.inoc.T, aes(x=Group, y=g__Escherichia.s__Escherichia_coli, fill=Group)) + geom_boxplot() + labs(title = "E. coli",y = "Relative Abundance") + scale_fill_brewer(palette="Set1") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5),legend.position="none")
+p2a <- ggplot(data = GFP.WT.4way.inoc.T, aes(x=Group, y=g__Lactobacillus.s__Lactobacillus_acidophilus, fill=Group)) + geom_boxplot() + labs(title = "L. acidophilus",y = "Relative Abundance") + scale_fill_brewer(palette="Set1") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5),legend.position="none")
+p3a <- ggplot(data = GFP.WT.4way.inoc.T, aes(x=Group, y=g__Bacteroides.s__Bacteroides_thetaiotaomicron, fill=Group)) + geom_boxplot() + labs(title = "B. thetaiotaomicron",y = "Relative Abundance") + scale_fill_brewer(palette="Set1") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5),legend.position="none")
+
+p1b <- ggplot(data = GFP.WT.4way.24.T, aes(x=Group, y=g__Escherichia.s__Escherichia_coli, fill=Group)) + geom_boxplot() + labs(y = "Relative Abundance") + scale_fill_brewer(palette="Set1") + theme_minimal() + theme(legend.position="none")
+p2b <- ggplot(data = GFP.WT.4way.24.T, aes(x=Group, y=g__Lactobacillus.s__Lactobacillus_acidophilus, fill=Group)) + geom_boxplot() + labs(y = "Relative Abundance") + scale_fill_brewer(palette="Set1") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5),legend.position="none")
+p3b <- ggplot(data = GFP.WT.4way.24.T, aes(x=Group, y=g__Bacteroides.s__Bacteroides_thetaiotaomicron, fill=Group)) + geom_boxplot() + labs(y = "Relative Abundance") + scale_fill_brewer(palette="Set1") + theme_minimal() + theme(plot.title = element_text(hjust = 0.5),legend.position="none")
+
+figure2 <- ggarrange(p1a + rremove("xylab"), p2a + rremove("xylab"), p3a + rremove("xylab"), p1b + rremove("xylab"), p2b + rremove("xylab"), p3b + rremove("xylab"), ncol = 3, nrow = 2)
+
+annotate_figure(figure2,
+               top = text_grob("4way Samples At Inoculation & Hour 24", color = "black", face = "bold", size = 14),
+               left = text_grob("Species Abundance", color = "black", rot = 90),
+               right = text_grob("Hour 24                    Inoculation", color = "gray40", rot = 90),
+)
+```
+
+# PCA biplot for organisms of Hour 24 samples 
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(ggbiplot)
+
+colors6 <- c("dodgerblue3", "darkorange", "red2", "darkblue", "purple2", "yellow2","gray")
+Hour24_Samples_forPCA <- read.csv("/Volumes/GRACE/HUMAnN2/Hour24_Samples_forPCA.csv")
+colnames(Hour24_Samples_forPCA) <- c("X", "B.fragilis", "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Full_Group", "Group")
+
+#colnames(Hour24_Samples2.T) <- c("B.fragilis" , "B.ovatus", "B.thetaiotaomicron", "E.coli", "E.rectale", "F.prausnitzii", "L.acidophilus", "Group")
+Hour24_Samples.pca <- prcomp(Hour24_Samples_forPCA[,2:(ncol(Hour24_Samples_forPCA)-2)], center = TRUE,scale. = TRUE)
+
+ggbiplot(Hour24_Samples.pca, obs.scale = 1, var.scale = 1, group=Hour24_Samples_forPCA$Group, var.axes = FALSE, labels.size=3, ellipse = TRUE, ellipse.prob = 0.95) +
+scale_color_manual(name="Group", values=colors6) +  
+scale_shape_manual(name="Group", values=c(14:19)) +
+geom_point(aes(colour=Hour24_Samples_forPCA$Group, shape=Hour24_Samples_forPCA$Group), size = 3) +
+theme(legend.direction ="horizontal", legend.position = "top") + 
+theme_minimal()
+```
+
+# Hypothesis Testing
+
+## ANOVA and Bonferroni Multiple Comparisons for Hour 24 Samples
+```{r}
+attach(Hour24_Samples2.T)
+a1 <- aov(E.coli ~ Group, data = Hour24_Samples2.T)
+pairwise.t.test(E.coli,Group, p.adj = "bonf", pool.sd = FALSE)
+```
+
+## t-tests for GFP vs WT of all species in 4way groups
+```{r}
+Inoc_Samples_4way2.T <- Inoc_Samples2.T %>% filter(!(Group %in% c("GFP-8way","WT-8way")))
+
+t.test(B.fragilis ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(B.ovatus ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(B.thetaiotaomicron ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(E.coli ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(E.rectale ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))
+t.test(F.prausnitzii ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))  
+t.test(L.acidophilus ~ Group, data= Inoc_Samples_4way2.T, alternative = c("two.sided"))  
+```
+
+
+
+
