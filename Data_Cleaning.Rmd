@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = FALSE, comment = '', message = FALSE, warning = FAL
 
 #### Import all bacterial abundance tables and aggregate by sample to determine total abundance (of selected organism) per sample.  Removed sample 93 (blank).
 ```{r}
+library(dplyr)
 Gene_Families <- read.csv("/Volumes/GRACE/HUMAnN2/HUMANn2 Tables/wham_genefamilies.csv")
 
 BacterialSet_total <- as.data.frame(aggregate(Gene_Families[,5:ncol(Gene_Families)], by=list(Species=Gene_Families$Species), FUN=sum))
@@ -53,7 +54,6 @@ WT_4way_24$Species_Overall <- c(rowSums(WT_4way_24[,2:ncol(WT_4way_24)]))
 ```
 
 ```{r}
-library(dplyr)
 GFP.WT.468way.inoc1 <- full_join(GFP_8way_inoc[,c("Species","Species_Overall")], WT_8way_inoc[,c("Species","Species_Overall")], by="Species")
 GFP.WT.468way.inoc2 <- full_join(GFP.WT.468way.inoc1, GFP_4way_inoc[,c("Species","Species_Overall")], by="Species")
 GFP.WT.468way.inoc <- full_join(GFP.WT.468way.inoc2, WT_4way_inoc[,c("Species","Species_Overall")], by="Species")
